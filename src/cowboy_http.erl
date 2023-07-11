@@ -49,6 +49,7 @@
 	request_timeout => timeout(),
 	sendfile => boolean(),
 	shutdown_timeout => timeout(),
+	so_buffer => non_neg_integer(),
 	stream_handlers => [module()],
 	tracer_callback => cowboy_tracer_h:tracer_callback(),
 	tracer_flags => [atom()],
@@ -177,6 +178,12 @@ init(Parent, Ref, Socket, Transport, ProxyHeader, Opts) ->
 				transport=Transport, proxy_header=ProxyHeader, opts=Opts,
 				peer=Peer, sock=Sock, cert=Cert,
 				last_streamid=maps:get(max_keepalive, Opts, 1000)},
+			case Opts of
+			    #{so_buffer := Buffer} ->
+				Transport:setopts(Socket, [{buffer, Buffer}]);
+			    _ ->
+				ok
+			end,
 			setopts_active(State),
 			loop(set_timeout(State, request_timeout));
 		{{error, Reason}, _, _} ->
